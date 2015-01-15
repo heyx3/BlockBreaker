@@ -31,6 +31,14 @@ public class GameGrid : MonoBehaviour
 				blocks[x, y] = null;
 	}
 	
+	/// <summary>
+	/// Gets the width/height of the grid.
+	/// </summary>
+	public Vector2i GetGridSize()
+	{
+		return new Vector2i(blocks.GetLength(0), blocks.GetLength(1));
+	}
+
 	
 	/// <summary>
 	/// Outputs the coordinates of the given block in the grid.
@@ -47,7 +55,15 @@ public class GameGrid : MonoBehaviour
 			return new Vector2i(-1, -1);
 		}
 	}
-	
+	/// <summary>
+	/// Gets the block at the given location.
+	/// Returns "null" if the given location doesn't contain a block.
+	/// </summary>
+	public GameGridBlock GetBlock(Vector2i loc)
+	{
+		return blocks[loc.X, loc.Y];
+	}
+
 	/// <summary>
 	/// Adds the given block to this grid at the given location.
 	/// If the given location is occupied, the new block is NOT placed.
@@ -75,16 +91,16 @@ public class GameGrid : MonoBehaviour
 		blocks[poses[block].X, poses[block].Y] = null;
 		poses[block] = newLoc;
 	}
+
 	/// <summary>
 	/// Clears the given location and all blocks that are near it, causing blocks above to fall.
-	/// Returns the number of blocks that were cleared in total.
-	/// If the given location is empty, returns 0.
+	/// Returns the location of the blocks that were cleared.
 	/// </summary>
-	public int ClearBlock(Vector2i loc)
+	public List<Vector2i> ClearBlock(Vector2i loc)
 	{
 		if (blocks[loc.X, loc.Y] == null)
 		{
-			return 0;
+			return new List<Vector2i>();
 		}
 		
 		int colorID = blocks[loc.X, loc.Y].ColorID;
@@ -101,7 +117,7 @@ public class GameGrid : MonoBehaviour
 		}
 		
 		//Clear all the blocks.
-		int count = ClearBlockRecursive(colorID, loc, wasCleared);
+		List<Vector2i> cleared = ClearBlockRecursive(colorID, loc, wasCleared);
 
 		//For every cleared block (working from the top down),
 		//    pull down all block above it by one space.
@@ -123,12 +139,13 @@ public class GameGrid : MonoBehaviour
 		}
 
 
-		return count;
+		return cleared;
 	}
 	/// <summary>
 	/// Clears this block, then clears all adjacent blocks
 	/// of the same color as this one, recursively.
-	private int ClearBlockRecursive(int colorID, Vector2i loc, bool[,] wasCleared)
+	/// Returns the blocks that have been cleared.
+	private List<Vector2i> ClearBlockRecursive(int colorID, Vector2i loc, bool[,] wasCleared)
 	{
 		//Destroy the block.
 		blocks[loc.X, loc.Y].OnBeingCleared();
@@ -136,33 +153,34 @@ public class GameGrid : MonoBehaviour
 		Destroy(blocks[loc.X, loc.Y].gameObject);
 		blocks[loc.X, loc.Y] = null;
 		
+		List<Vector2i> cleared = new List<Vector2i>() { loc };
+
 		//Clear all the adjacent blocks of the same color and count how many there were.
 		//Go up along the Y first to make sure all blocks above this one are cleared before blocks are pulled down.
-		int count = 1;
 		if (loc.Y < blocks.GetLength(1) - 1 && blocks[loc.X, loc.Y + 1] != null &&
 		    blocks[loc.X, loc.Y + 1].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y + 1), wasCleared);
+			cleared.AddRange(ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y + 1), wasCleared));
 		}
 		if (loc.X > 0 && blocks[loc.X - 1, loc.Y] != null &&
 		    blocks[loc.X - 1, loc.Y].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X - 1, loc.Y), wasCleared);
+			cleared.AddRange(ClearBlockRecursive(colorID, new Vector2i(loc.X - 1, loc.Y), wasCleared));
 		}
 		if (loc.Y > 0 && blocks[loc.X, loc.Y - 1] != null &&
 		    blocks[loc.X, loc.Y - 1].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y - 1), wasCleared);
+			cleared.AddRange(ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y - 1), wasCleared));
 		}
 		if (loc.X < blocks.GetLength(0) - 1 && blocks[loc.X + 1, loc.Y] != null &&
 		    blocks[loc.X + 1, loc.Y].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X + 1, loc.Y), wasCleared);
+			cleared.AddRange(ClearBlockRecursive(colorID, new Vector2i(loc.X + 1, loc.Y), wasCleared));
 		}
 
 		wasCleared[loc.X, loc.Y] = true;
 		
-		return count;
+		return cleared;
 	}
 	
 	

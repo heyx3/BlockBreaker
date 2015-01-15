@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -18,42 +19,68 @@ public abstract class GameplayController : MonoBehaviour
 
 
 	/// <summary>
-	/// Gets or sets the number of blocks that have been cleared so far.
+	/// Gets the total number of blocks that have been cleared so far.
 	/// </summary>
-	public int BlocksCleared
-	{
-		get { return blocksCleared; }
-		set
-		{
-			int oldVal = blocksCleared;
-			blocksCleared = value;
+	public int BlocksCleared { get; private set; }
 
-			if (OnBlocksClearedChanged != null)
-			{
-				OnBlocksClearedChanged(oldVal, value);
-			}
-		}
-	}
-	private int blocksCleared;
 
 	/// <summary>
-	/// A function that reacts to the "BlocksCleared" property being changed.
+	/// The different kinds of actions that can result in a block being cleared.
 	/// </summary>
-	public delegate void BlocksClearedChangedReaction(int oldVal, int newVal);
+	public enum ClearBlockActions
+	{
+		PlayerInput,
+	}
+	/// <summary>
+	/// A function that reacts to the "BlocksCleared" property being changed.
+	/// Note that the block locations being passed in are likely now occupied
+	///     by other blocks that have fallen into the space from above.
+	/// </summary>
+	public delegate void BlocksClearedChangedReaction(List<Vector2i> clearedBlockLocs,
+													  ClearBlockActions reasonForClearing);
 	/// <summary>
 	/// Raised when this instance's "BlocksCleared" property is set.
 	/// </summary>
 	public event BlocksClearedChangedReaction OnBlocksClearedChanged;
 
 
+	public GameObject BlockPrefab = null;
+	
+
 	/// <summary>
-	/// Will be called after the player does an action.
+	/// Creates a basic block with the given properties and adds it to the world grid.
 	/// </summary>
-	public abstract void OnPlayerClearedBlock();
+	public GameGridBlock CreateBlock(Vector2 position, Vector2i gridLoc, int colorID)
+	{
+		Transform tr = ((GameObject)Instantiate(BlockPrefab)).transform;
+		GameGridBlock block = tr.GetComponent<GameGridBlock>();
+
+		tr.position = new Vector3(position.x, position.y, tr.position.z);
+		block.ColorID = colorID;
+
+		GameGrid.Instance.AddBlock(gridLoc, block);
+
+		return block;
+	}
+
+
+	/// <summary>
+	/// Reacts to blocks being cleared from the given locations.
+	/// </summary>
+	public void ClearedBlocks(List<Vector2i> clearedBlockLocs, ClearBlockActions reasonForClearing)
+	{
+		BlocksCleared += clearedBlockLocs.Count;
+
+		if (OnBlocksClearedChanged != null)
+		{
+			OnBlocksClearedChanged(clearedBlockLocs, reasonForClearing);
+		}
+	}
+
 
 	/// <summary>
 	/// Override this function to add behavior on awake.
-	/// Default behavior: sets the static reference to this controller.
+	/// Default behavior: checks and sets up some static and member fields.
 	/// </summary>
 	protected virtual void Awake()
 	{
@@ -62,6 +89,11 @@ public abstract class GameplayController : MonoBehaviour
 			Debug.LogError("More than one 'GameplayController' instance currently active!");
 		}
 		Instance = this;
+
+		if (BlockPrefab == null)
+		{
+			Debug.LogError("The 'BlockPrefab' field in the '" + GetType().ToString() + "' isn't set!");
+		}
 	}
 
 	/// <summary>

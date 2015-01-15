@@ -12,6 +12,13 @@ public class GameGridBlock : MonoBehaviour
 {
 	public int ColorID;
 
+	/// <summary>
+	/// Scales the movement speed of this block.
+	/// Gets reset to 1.0 once the block reaches its target.
+	/// </summary>
+	[NonSerialized]
+	public float TempMoveSpeedScale = 1.0f;
+
 	private GameGrid grid { get { return GameGrid.Instance; } }
 	private Transform tr;
 
@@ -39,18 +46,18 @@ public class GameGridBlock : MonoBehaviour
 		if (seekPos.X != -1 && seekPos.Y != -1)
 		{
 			Vector2 seekPosF = new Vector2((float)seekPos.X, (float)seekPos.Y);
-
 			Vector2 toSeekPos = seekPosF - (Vector2)currentPos;
 
 
 			//If the block is close enough to its destination, just snap to it.
-
-			float moveSpeed = Time.deltaTime * GameConstants.Instance.BlockFallSpeed;
-
+			float moveSpeed = TempMoveSpeedScale * GameConstants.Instance.BlockFallSpeed *
+							  Time.deltaTime;
 			if ((moveSpeed * moveSpeed) > toSeekPos.sqrMagnitude)
 			{
 				tr.position = new Vector3(seekPosF.x, seekPosF.y, currentPos.z);
+				TempMoveSpeedScale = 1.0f;
 			}
+			//Otherwise, move like normal.
 			else
 			{
 				Vector2 moveAmount = toSeekPos.normalized * moveSpeed;

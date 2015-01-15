@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 
 /// <summary>
@@ -63,9 +63,8 @@ public class PlayerInput : MonoBehaviour
 				GameGridBlock tryBlock = hit.GetComponent<GameGridBlock>();
 				if (tryBlock != null)
 				{
-					int score = GameGrid.Instance.ClearBlock(GameGrid.Instance.GetLocation (tryBlock));
-					GameplayController.Instance.BlocksCleared += score;
-					GameplayController.Instance.OnPlayerClearedBlock();
+					List<Vector2i> cleared = GameGrid.Instance.ClearBlock(GameGrid.Instance.GetLocation (tryBlock));
+					GameplayController.Instance.ClearedBlocks(cleared, GameplayController.ClearBlockActions.PlayerInput);
 				}
 			}
 		}

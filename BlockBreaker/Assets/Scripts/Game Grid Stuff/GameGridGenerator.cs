@@ -21,12 +21,11 @@ public class GameGridGenerator : MonoBehaviour
 	public float OrthoSize = 3.5f;
 
 	public int Seed = 12345679;
-	public int NBlockTypes = 4;
 	public int NBlocksX = 4,
 			   NBlocksY = 7;
 
 
-	private GameGridBlock GenerateBlock(Vector2 position, Vector2i gridLoc, int colorID)
+	public GameGridBlock GenerateBlock(Vector2 position, Vector2i gridLoc, int colorID)
 	{
 		Transform tr = ((GameObject)Instantiate(BlockPrefab)).transform;
 		GameGridBlock block = tr.GetComponent<GameGridBlock>();
@@ -53,25 +52,41 @@ public class GameGridGenerator : MonoBehaviour
 						      "component isn't set!");
 		}
 	}
-	void Start ()
+	void Start()
 	{
 		//Set up the grid.
+		//Start the objects pushed radially away from their target positions
+		//    to create an interesting intro animation.
 		Random.seed = Seed;
 		GameGrid.Instance.ResetGrid(new Vector2i(NBlocksX, NBlocksY));
+		Vector2 gridCenter = new Vector2((float)(NBlocksX * 0.5f) - 0.5f,
+										 (float)(NBlocksY * 0.5f) - 0.5f);
 		for (int x = 0; x < NBlocksX; ++x)
 		{
 			for (int y = 0; y < NBlocksY; ++y)
 			{
-				GenerateBlock(new Vector2(x, y)	, new Vector2i(x, y), Random.Range(0, NBlockTypes));
+				Vector2 target = new Vector2((float)x, (float)y);
+				Vector2 startPosDelta = (target - gridCenter) *
+										(1.0f * Mathf.Pow((target - gridCenter).magnitude, 0.35f));
+				GenerateBlock(target + startPosDelta, new Vector2i(x, y),
+							  Random.Range(0, GameConstants.Instance.NBlockTypes)).TempMoveSpeedScale = 0.25f;
 			}
 		}
 
 		//Set up the camera.
-		BlockViewCam.transform.position = new Vector3(((float)NBlocksX * 0.5f) - 0.5f,
-													  ((float)NBlocksY * 0.5f) - 0.5f,
+		BlockViewCam.transform.position = new Vector3(gridCenter.x, gridCenter.y,
 													  BlockViewCam.transform.position.z);
 		BlockViewCam.orthographicSize = OrthoSize;
 
-		Destroy(this);
+
+		//Disable the player's input for a short time to let the blocks settle into place.
+		StartCoroutine(PauseInputCoroutine());
+	}
+
+	private IEnumerator PauseInputCoroutine()
+	{
+		PlayerInput.Instance.IsInputDisabled = true;
+		yield return new WaitForSeconds(2.5f);
+		PlayerInput.Instance.IsInputDisabled = false;
 	}
 }
