@@ -10,7 +10,6 @@ public class GameGrid : MonoBehaviour
 	public static GameGrid Instance { get; private set; }
 	
 	
-	
 	/// <summary>
 	/// The blocks, arranged in the order they should be in on the game grid.
 	/// </summary>
@@ -91,31 +90,45 @@ public class GameGrid : MonoBehaviour
 		int colorID = blocks[loc.X, loc.Y].ColorID;
 		
 		
-		//Recursively destroy blocks and keep track of how much each other block has to move down.
-		
-		int[,] moveDownAmounts = new int[blocks.GetLength (0), blocks.GetLength (1)];
+		//Initialize a grid representing whether each block has just been cleared.
+		bool[,] wasCleared = new bool[blocks.GetLength (0), blocks.GetLength (1)];
 		for (int x = 0; x < blocks.GetLength(0); ++x)
 		{
 			for (int y = 0; y < blocks.GetLength(1); ++y)
 			{
-				moveDownAmounts[x, y] = 0;
+				wasCleared[x, y] = false;
 			}
 		}
 		
-		int count = ClearBlockRecursive(colorID, loc, moveDownAmounts);
+		//Clear all the blocks.
+		int count = ClearBlockRecursive(colorID, loc, wasCleared);
+
+		//For every cleared block (working from the top down),
+		//    pull down all block above it by one space.
 		for (int x = 0; x < blocks.GetLength(0); ++x)
 		{
-			for (int y = 0; y < blocks.GetLength(1); ++y)
+			for (int y = blocks.GetLength(1) - 1; y >= 0; --y)
 			{
-				MoveBlock(blocks[x, y], new Vector2i(x, y - moveDownAmounts[x, y]));
+				if (wasCleared[x, y])
+				{
+					for (int yAbove = y + 1; yAbove < blocks.GetLength(1); ++yAbove)
+					{
+						if (blocks[x, yAbove] != null)
+						{
+							MoveBlock(blocks[x, yAbove], new Vector2i(x, yAbove - 1));
+						}
+					}
+				}
 			}
 		}
+
+
 		return count;
 	}
 	/// <summary>
 	/// Clears this block, then clears all adjacent blocks
 	/// of the same color as this one, recursively.
-	private int ClearBlockRecursive(int colorID, Vector2i loc, int[,] moveDownAmounts)
+	private int ClearBlockRecursive(int colorID, Vector2i loc, bool[,] wasCleared)
 	{
 		//Destroy the block.
 		blocks[loc.X, loc.Y].OnBeingCleared();
@@ -129,32 +142,25 @@ public class GameGrid : MonoBehaviour
 		if (loc.Y < blocks.GetLength(1) - 1 && blocks[loc.X, loc.Y + 1] != null &&
 		    blocks[loc.X, loc.Y + 1].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y + 1), moveDownAmounts);
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y + 1), wasCleared);
 		}
 		if (loc.X > 0 && blocks[loc.X - 1, loc.Y] != null &&
 		    blocks[loc.X - 1, loc.Y].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X - 1, loc.Y), moveDownAmounts);
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X - 1, loc.Y), wasCleared);
 		}
 		if (loc.Y > 0 && blocks[loc.X, loc.Y - 1] != null &&
 		    blocks[loc.X, loc.Y - 1].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y - 1), moveDownAmounts);
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y - 1), wasCleared);
 		}
 		if (loc.X < blocks.GetLength(0) - 1 && blocks[loc.X + 1, loc.Y] != null &&
 		    blocks[loc.X + 1, loc.Y].ColorID == colorID)
 		{
-			count += ClearBlockRecursive(colorID, new Vector2i(loc.X + 1, loc.Y), moveDownAmounts);
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X + 1, loc.Y), wasCleared);
 		}
-		
-		//Move all blocks above it downward one space.
-		for (int y = loc.Y + 1; y < blocks.GetLength(1); ++y)
-		{
-			if (blocks[loc.X, y] != null)
-			{
-				moveDownAmounts[loc.X, y] += 1;
-			}
-		}
+
+		wasCleared[loc.X, loc.Y] = true;
 		
 		return count;
 	}

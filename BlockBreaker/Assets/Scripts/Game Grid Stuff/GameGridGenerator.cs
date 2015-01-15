@@ -7,8 +7,17 @@ using System.Collections;
 /// </summary>
 public class GameGridGenerator : MonoBehaviour
 {
+	/// <summary>
+	/// The template for creating game grid blocks.
+	/// </summary>
 	public GameObject BlockPrefab = null;
+	/// <summary>
+	/// The camera that renders the grid blocks.
+	/// </summary>
 	public Camera BlockViewCam = null;
+	/// <summary>
+	/// The orthographic size of the camera for rendering the generated grid.
+	/// </summary>
 	public float OrthoSize = 3.5f;
 
 	public int Seed = 12345679;

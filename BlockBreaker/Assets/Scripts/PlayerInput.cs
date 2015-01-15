@@ -3,15 +3,31 @@ using System.Collections;
 
 
 /// <summary>
-/// Handles player touch/click input.
+/// A singleton component that handles the local player's touch/click input.
 /// </summary>
 public class PlayerInput : MonoBehaviour
 {
+	public static PlayerInput Instance { get; private set; }
+
+
+	/// <summary>
+	/// The camera that renders the grid blocks.
+	/// </summary>
 	public Camera BlockViewCam = null;
+	/// <summary>
+	/// While this is true, touch/mouse input will not be noticed by this component.
+	/// </summary>
+	public bool IsInputDisabled = false;
 
 
 	void Awake()
 	{
+		if (Instance != null)
+		{
+			Debug.LogError("More than one 'PlayerInput' instance currently active!");
+		}
+		Instance = this;
+
 		if (BlockViewCam == null)
 		{
 			Debug.LogError("'BlockViewCam' object in 'PlayerInput' component isn't set!");
@@ -20,6 +36,12 @@ public class PlayerInput : MonoBehaviour
 	
 	void Update()
 	{
+		if (IsInputDisabled)
+		{
+			return;
+		}
+
+
 		//Get any mouse/touch input.
 		Vector2? worldInputPos = null;
 		if (Input.GetMouseButtonDown(0))
@@ -37,11 +59,13 @@ public class PlayerInput : MonoBehaviour
 			Collider2D hit = Physics2D.OverlapPoint(worldInputPos.Value);
 			if (hit != null)
 			{
+				//If a block was tapped/clicked, clear it.
 				GameGridBlock tryBlock = hit.GetComponent<GameGridBlock>();
 				if (tryBlock != null)
 				{
 					int score = GameGrid.Instance.ClearBlock(GameGrid.Instance.GetLocation (tryBlock));
-					Debug.Log ("Score: " + score.ToString ());
+					GameplayController.Instance.BlocksCleared += score;
+					GameplayController.Instance.OnPlayerClearedBlock();
 				}
 			}
 		}
