@@ -19,6 +19,7 @@ sysinfo.txt
 /*.user
 /*.unityproj
 /*.booproj
+BlockBreaker/Assets/UnityVS*
 
 # ============ #
 # OS generated #
