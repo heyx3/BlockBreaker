@@ -8,8 +8,8 @@ using System.Collections.Generic;
 public class GameGrid : MonoBehaviour
 {
 	public static GameGrid Instance { get; private set; }
-
-
+	
+	
 	
 	/// <summary>
 	/// The blocks, arranged in the order they should be in on the game grid.
@@ -19,30 +19,20 @@ public class GameGrid : MonoBehaviour
 	/// The target position of each block. Provides a way to quickly look up any block's position.
 	/// </summary>
 	private Dictionary<GameGridBlock, Vector2i> poses = new Dictionary<GameGridBlock, Vector2i>();
-
-
+	
+	
 	/// <summary>
-	/// Starts a new block grid with the given blocks.
-	/// Use "null" for grid elements that should be empty.
+	/// Empties the grid and resizes it to the given size.
 	/// </summary>
-	public void InitializeGrid(GameGridBlock[,] _blocks)
+	public void ResetGrid(Vector2i size)
 	{
-		blocks = new GameGridBlock[_blocks.GetLength(0), _blocks.GetLength(1)];
-
-		for (Vector2i loc = new Vector2i(0, 0); loc.X < _blocks.GetLength(0); ++loc.X)
-		{
-			for (loc.Y = 0; loc.Y < _blocks.GetLength(1); ++loc.Y)
-			{
-				blocks[loc.X, loc.Y] = _blocks[loc.X, loc.Y];
-
-				if (blocks[loc.X, loc.Y] != null)
-				{
-					poses.Add(blocks[loc.X, loc.Y], loc);
-				}
-			}
-		}
+		blocks = new GameGridBlock[size.X, size.Y];
+		for (int x = 0; x < size.X; ++x)
+			for (int y = 0; y < size.Y; ++y)
+				blocks[x, y] = null;
 	}
-
+	
+	
 	/// <summary>
 	/// Outputs the coordinates of the given block in the grid.
 	/// If the given block doesn't exist in the grid, returns {-1, -1}.
@@ -58,7 +48,7 @@ public class GameGrid : MonoBehaviour
 			return new Vector2i(-1, -1);
 		}
 	}
-
+	
 	/// <summary>
 	/// Adds the given block to this grid at the given location.
 	/// If the given location is occupied, the new block is NOT placed.
@@ -70,11 +60,21 @@ public class GameGrid : MonoBehaviour
 		{
 			return false;
 		}
-
+		
 		poses.Add(block, loc);
 		blocks[loc.X, loc.Y] = block;
-
+		
 		return true;
+	}
+	/// <summary>
+	/// Moves the given block to the given new location.
+	/// Assumes no block is there already.
+	/// </summary>
+	public void MoveBlock(GameGridBlock block, Vector2i newLoc)
+	{
+		blocks[newLoc.X, newLoc.Y] = block;
+		blocks[poses[block].X, poses[block].Y] = null;
+		poses[block] = newLoc;
 	}
 	/// <summary>
 	/// Clears the given location and all blocks that are near it, causing blocks above to fall.
@@ -87,48 +87,91 @@ public class GameGrid : MonoBehaviour
 		{
 			return 0;
 		}
-
+		
 		int colorID = blocks[loc.X, loc.Y].ColorID;
-
+		
+		
+		//Recursively destroy blocks and keep track of how much each other block has to move down.
+		
+		int[,] moveDownAmounts = new int[blocks.GetLength (0), blocks.GetLength (1)];
+		for (int x = 0; x < blocks.GetLength(0); ++x)
+		{
+			for (int y = 0; y < blocks.GetLength(1); ++y)
+			{
+				moveDownAmounts[x, y] = 0;
+			}
+		}
+		
+		int count = ClearBlockRecursive(colorID, loc, moveDownAmounts);
+		for (int x = 0; x < blocks.GetLength(0); ++x)
+		{
+			for (int y = 0; y < blocks.GetLength(1); ++y)
+			{
+				MoveBlock(blocks[x, y], new Vector2i(x, y - moveDownAmounts[x, y]));
+			}
+		}
+		return count;
+	}
+	/// <summary>
+	/// Clears this block, then clears all adjacent blocks
+	/// of the same color as this one, recursively.
+	private int ClearBlockRecursive(int colorID, Vector2i loc, int[,] moveDownAmounts)
+	{
+		//Destroy the block.
 		blocks[loc.X, loc.Y].OnBeingCleared();
 		poses.Remove(blocks[loc.X, loc.Y]);
 		Destroy(blocks[loc.X, loc.Y].gameObject);
-
+		blocks[loc.X, loc.Y] = null;
+		
 		//Clear all the adjacent blocks of the same color and count how many there were.
+		//Go up along the Y first to make sure all blocks above this one are cleared before blocks are pulled down.
 		int count = 1;
-		if (loc.X > 0 && blocks[loc.X - 1, loc.Y].ColorID == colorID)
+		if (loc.Y < blocks.GetLength(1) - 1 && blocks[loc.X, loc.Y + 1] != null &&
+		    blocks[loc.X, loc.Y + 1].ColorID == colorID)
 		{
-			count += ClearBlock(new Vector2i(loc.X - 1, loc.Y));
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y + 1), moveDownAmounts);
 		}
-		if (loc.Y > 0 && blocks[loc.X, loc.Y - 1].ColorID == colorID)
+		if (loc.X > 0 && blocks[loc.X - 1, loc.Y] != null &&
+		    blocks[loc.X - 1, loc.Y].ColorID == colorID)
 		{
-			count += ClearBlock(new Vector2i(loc.X, loc.Y - 1));
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X - 1, loc.Y), moveDownAmounts);
 		}
-		if (loc.X < blocks.GetLength(0) - 1 && blocks[loc.X + 1, loc.Y].ColorID == colorID)
+		if (loc.Y > 0 && blocks[loc.X, loc.Y - 1] != null &&
+		    blocks[loc.X, loc.Y - 1].ColorID == colorID)
 		{
-			count += ClearBlock(new Vector2i(loc.X + 1, loc.Y));
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X, loc.Y - 1), moveDownAmounts);
 		}
-		if (loc.Y < blocks.GetLength(1) - 1 && blocks[loc.X, loc.Y + 1].ColorID == colorID)
+		if (loc.X < blocks.GetLength(0) - 1 && blocks[loc.X + 1, loc.Y] != null &&
+		    blocks[loc.X + 1, loc.Y].ColorID == colorID)
 		{
-			count += ClearBlock(new Vector2i(loc.X, loc.Y + 1));
+			count += ClearBlockRecursive(colorID, new Vector2i(loc.X + 1, loc.Y), moveDownAmounts);
 		}
-
+		
+		//Move all blocks above it downward one space.
+		for (int y = loc.Y + 1; y < blocks.GetLength(1); ++y)
+		{
+			if (blocks[loc.X, y] != null)
+			{
+				moveDownAmounts[loc.X, y] += 1;
+			}
+		}
+		
 		return count;
 	}
-
-
+	
+	
 	void Awake()
 	{
 		if (Instance != null)
 		{
 			Debug.LogError("There is more than one 'GameGrid' component in the scene!");
 		}
-
+		
 		Instance = this;
 	}
-
+	
 	void Update()
 	{
-
+		
 	}
 }

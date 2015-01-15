@@ -47,7 +47,7 @@ public class GameGridBlock : MonoBehaviour
 
 			float moveSpeed = Time.deltaTime * GameConstants.Instance.BlockFallSpeed;
 
-			if ((moveSpeed * moveSpeed) < toSeekPos.sqrMagnitude)
+			if ((moveSpeed * moveSpeed) > toSeekPos.sqrMagnitude)
 			{
 				tr.position = new Vector3(seekPosF.x, seekPosF.y, currentPos.z);
 			}
