@@ -27,6 +27,15 @@ public class GameConstants : MonoBehaviour
 	/// </summary>
 	public int NBlockTypes = 4;
 
+	[Serializable]
+	public class BlockPushEffectData
+	{
+		public float PushTime = 0.5f, HangTime = 0.3f;
+		public float PushSpeed = 1.0f;
+		public float PushFalloffExponent = 1.0f;
+	}
+	public BlockPushEffectData BlockPushEffect = new BlockPushEffectData();
+
 
 	void Awake()
 	{
@@ -41,5 +50,15 @@ public class GameConstants : MonoBehaviour
 			Debug.LogError("This scene uses " + NBlockTypes.ToString() + " different block types, " +
 						   "but only has " + BlockMaterials.Count.ToString() + " different materials!");
 		}
+	}
+
+	public void CreateBlockPush(GameGridBlock blockObj, Vector3 pushAwayFrom)
+	{
+		PushBlockAway push = blockObj.gameObject.AddComponent<PushBlockAway>();
+		push.PushAwayFrom = pushAwayFrom;
+		push.PushTime = BlockPushEffect.PushTime;
+		push.HangTime = BlockPushEffect.HangTime;
+		push.PushSpeed = BlockPushEffect.PushSpeed;
+		push.PushFalloffExponent = BlockPushEffect.PushFalloffExponent;
 	}
 }

@@ -64,6 +64,11 @@ public class GameGrid : MonoBehaviour
 		return blocks[loc.X, loc.Y];
 	}
 
+	public IEnumerable<GameGridBlock> GetBlocks()
+	{
+		return poses.Keys;
+	}
+
 	/// <summary>
 	/// Adds the given block to this grid at the given location.
 	/// If the given location is occupied, the new block is NOT placed.
