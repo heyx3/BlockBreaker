@@ -1,11 +1,12 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Game Grid Stuff/GameGridBlock.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/KillAfterTime.cs">
     <Files>
-      <File FileName="../../example-ios-unity-landscape/Assets/Scripts/SKZInitTestApp.cs" Line="1" Column="1" />
-      <File FileName="../../example-ios-unity-landscape/Assets/Scripts/SKZTestApp.cs" Line="1" Column="1" />
-      <File FileName="../../example-ios-unity-landscape/Assets/Skillz/SkillzDelegate.cs" Line="1" Column="1" />
-      <File FileName="Assets/Scripts/Game Grid Stuff/GameGridBlock.cs" Line="58" Column="5" />
+      <File FileName="Assets/Scripts/GameConstants.cs" Line="30" Column="37" />
+      <File FileName="Assets/Scripts/PlayerInput.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/Game Grid Stuff/GameGrid.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/Game Grid Stuff/GameGridBlock.cs" Line="46" Column="41" />
+      <File FileName="Assets/Scripts/KillAfterTime.cs" Line="13" Column="22" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

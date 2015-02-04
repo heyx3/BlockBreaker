@@ -38,9 +38,12 @@ public class GameGridBlock : MonoBehaviour
 	public void OnBeingCleared()
 	{
 		Vector3 pos = tr.position;
+
 		foreach (GameGridBlock block in grid.GetBlocks())
 			if (block != this)
 				GameConstants.Instance.CreateBlockPush(block, pos);
+
+		((GameObject)GameConstants.Instantiate(GameConstants.Instance.ClearBlocksEffectPrefab)).transform.position = pos;
 	}
 
 

@@ -27,6 +27,8 @@ public class GameConstants : MonoBehaviour
 	/// </summary>
 	public int NBlockTypes = 4;
 
+	public GameObject ClearBlocksEffectPrefab;
+
 	[Serializable]
 	public class BlockPushEffectData
 	{
