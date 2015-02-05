@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -15,9 +16,7 @@ public class GameplayController_TurnBased : GameplayController
 
 
 	public UnityEngine.UI.Text CurrentPlayerUIText,
-							   TurnsLeftUIText,
-							   Score1UIText,
-							   Score2UIText;
+							   TurnsLeftUIText;
 
 	/// <summary>
 	/// The minimum amount of time between moves.
@@ -28,6 +27,11 @@ public class GameplayController_TurnBased : GameplayController
 	/// The number of turns remaining until the game ends.
 	/// </summary>
 	public int TurnsLeft = 20;
+
+	/// <summary>
+	/// The amount of time between a block being destroyed and a replacement being spawned.
+	/// </summary>
+	public float BlockSpawnWaitTime = 0.6f;
 	
 	/// <summary>
 	/// The score gained from clearing a single block.
@@ -72,22 +76,64 @@ public class GameplayController_TurnBased : GameplayController
 				PlayerTwoScore += Mathf.RoundToInt(BaseBlockScoreValue * blockMultiplier);
 			}
 
+			//Drop extra blocks in for every block that was cleared.
+			StartCoroutine(WaitSpawnCoroutine(clearedBlocks));
+
 			//Change turns.
 			IsPlayer1Turn = !IsPlayer1Turn;
 			TurnsLeft -= 1;
-			if (TurnsLeft < 0)
-			{
-				throw new NotImplementedException("Add a \"ReviewTurnBased\" scene!");
-			}
 		};
 	}
 	protected override void Update ()
 	{
 		base.Update ();
-		
+
+		//Update UI text.
 		CurrentPlayerUIText.text = (IsPlayer1Turn ? "Player 1" : "Player 2");
 		TurnsLeftUIText.text = TurnsLeft.ToString () + " left";
-		Score1UIText.text = PlayerOneScore.ToString();
-		Score2UIText.text = PlayerTwoScore.ToString();
+
+		//Check for end of game.
+		if (!LocalPlayer.IsInputDisabled && TurnsLeft <= 0)
+		{
+			Application.LoadLevel("PresentTurnBasedScore");
+		}
+	}
+
+	private System.Collections.IEnumerator WaitSpawnCoroutine(List<Vector2i> clearedBlocks)
+	{
+		yield return new WaitForSeconds(BlockSpawnWaitTime);
+		
+		//Get how many blocks cleared in each column.
+		int[] clearsPerCol = new int[Grid.GetGridSize().X];
+		for (int x = 0; x < clearsPerCol.Length; ++x)
+		{
+			clearsPerCol[x] = 0;
+		}
+		foreach (Vector2i loc in clearedBlocks)
+		{
+			clearsPerCol[loc.X] += 1;
+		}
+		
+		//Add blocks to each column to compensate for the missing ones.
+		for (int x = 0; x < clearsPerCol.Length; ++x)
+		{
+			if (clearsPerCol[x] > 0)
+			{
+				//First find the lowest spot with no block above it.
+				int lowestY = 0;
+				while (Grid.GetBlock(new Vector2i(x, lowestY)) != null)
+				{
+					lowestY += 1;
+				}
+				//Now start at that spot and stack up the new blocks so they fall into place.
+				for (int y = lowestY; y < lowestY + clearsPerCol[x]; ++y)
+				{
+					int deltaStart = y - lowestY;
+					CreateBlock(new Vector2((float)x, (float)(Grid.GetGridSize().Y + deltaStart)),
+					            new Vector2i(x, y),
+					            UnityEngine.Random.Range(0, Constants.NBlockTypes));
+				}
+			}
+		}
 	}
 }
