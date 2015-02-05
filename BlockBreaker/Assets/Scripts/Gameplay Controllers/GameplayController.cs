@@ -79,6 +79,17 @@ public abstract class GameplayController : MonoBehaviour
 
 
 	/// <summary>
+	/// Disables the player's input for 'MoveWaitTime' seconds.
+	/// </summary>
+	protected System.Collections.IEnumerator PauseInputCoroutine(float time)
+	{
+		LocalPlayer.IsInputDisabled = true;
+		yield return new WaitForSeconds(time);
+		LocalPlayer.IsInputDisabled = false;
+	}
+
+
+	/// <summary>
 	/// Override this function to add behavior on awake.
 	/// Default behavior: checks and sets up some static and member fields.
 	/// </summary>

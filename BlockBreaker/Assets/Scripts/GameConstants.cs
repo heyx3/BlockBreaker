@@ -8,6 +8,13 @@ using UnityEngine;
 /// </summary>
 public class GameConstants : MonoBehaviour
 {
+	public static float CutOffDecimals(float f, int nDecimals)
+	{
+		float pow10 = Mathf.Pow(10.0f, nDecimals);
+		return (float)(long)(f * pow10) / pow10;
+	}
+
+
 	public static GameConstants Instance { get; private set; }
 
 

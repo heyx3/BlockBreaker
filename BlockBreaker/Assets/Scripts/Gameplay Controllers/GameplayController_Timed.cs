@@ -8,8 +8,27 @@ using UnityEngine;
 ///     with just a small pause in between moves to allow for animations to finish.
 /// Drops extra blocks in whenever another block is cleared.
 /// </summary>
-public class GameplayController_SinglePlayer : GameplayController
+public class GameplayController_Timed : GameplayController
 {
+	/// <summary>
+	/// The player's score, stored statically so that it persists between scenes.
+	/// </summary>
+	public static int FinalScore;
+
+
+	/// <summary>
+	/// The score gained from clearing a single block.
+	/// Larger values are preferable because they mean more precision
+	///     in the exponential score gain from clearing extra blocks.
+	/// </summary>
+	public int BaseBlockScoreValue = 100;
+	/// <summary>
+	/// The exponent determining how much better the player's score is
+	/// when he clears a few large chunks compared to a lot of small chunks.
+	/// Should always be greater than (or equal to) 1.0.
+	/// </summary>
+	public float ScoreBlockExponent = 2.0f;
+
 	/// <summary>
 	/// The amount of time the player must wait between moves.
 	/// </summary>
@@ -19,24 +38,61 @@ public class GameplayController_SinglePlayer : GameplayController
 	/// </summary>
 	public float BlockSpawnWaitTime = 0.6f;
 
+	/// <summary>
+	/// The amount of time left before the game ends.
+	/// </summary>
+	public float TimeLeft = 45.0f;
+
+	/// <summary>
+	/// The UI element that displays how much time is left.
+	/// </summary>
+	public UnityEngine.UI.Text TimeLeftLabel;
+
+
+	public void Abandon()
+	{
+		Application.LoadLevel("MainMenu");
+	}
+
 
 	protected override void Awake()
 	{
 		base.Awake();
 
-		//Pause the player's input whenever he clears a row.
+		FinalScore = 0;
+
 		OnBlocksClearedChanged += (clearedBlocks, reason) =>
+		{
+			//Pause the player's input.
+			if (reason == ClearBlockActions.PlayerInput)
 			{
-				if (reason == ClearBlockActions.PlayerInput)
-				{
-					StartCoroutine(PauseInputCoroutine());
-				}
-			};
-		//Drop extra blocks in for every block that was cleared.
-		OnBlocksClearedChanged += (clearedBlocks, reason) =>
-			{
-				StartCoroutine(WaitSpawnCoroutine(clearedBlocks));
-			};
+				StartCoroutine(PauseInputCoroutine());
+			}
+
+			//Drop extra blocks in for every block that was cleared.
+			StartCoroutine(WaitSpawnCoroutine(clearedBlocks));
+
+
+			//Calculate the player's score.
+
+			float blockMultiplier = Mathf.Pow (clearedBlocks.Count, ScoreBlockExponent);
+			FinalScore += Mathf.RoundToInt(BaseBlockScoreValue * blockMultiplier);
+		};
+	}
+
+	protected override void Update ()
+	{
+		base.Update ();
+
+		//Update timing.
+		TimeLeft -= Time.deltaTime;
+		if (TimeLeft <= 0.0f)
+		{
+			Application.LoadLevel("PresentTimedScore");
+		}
+
+		//Update UI.
+		TimeLeftLabel.text = GameConstants.CutOffDecimals(TimeLeft, 1).ToString();
 	}
 	
 

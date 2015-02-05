@@ -11,14 +11,6 @@ public class GameGridGenerator : MonoBehaviour
 	/// The template for creating game grid blocks.
 	/// </summary>
 	public GameObject BlockPrefab = null;
-	/// <summary>
-	/// The camera that renders the grid blocks.
-	/// </summary>
-	public Camera BlockViewCam = null;
-	/// <summary>
-	/// The orthographic size of the camera for rendering the generated grid.
-	/// </summary>
-	public float OrthoSize = 3.5f;
 
 	public int Seed = 12345679;
 	public int NBlocksX = 4,
@@ -46,11 +38,6 @@ public class GameGridGenerator : MonoBehaviour
 			Debug.LogError("'BlockPrefab' field in 'GameGridGenerator' " +
 						     "component isn't set!");
 		}
-		if (BlockViewCam == null)
-		{
-			Debug.LogError("'BlockViewCam' field in 'GameGridGenerator' " +
-						      "component isn't set!");
-		}
 	}
 	void Start()
 	{
@@ -72,11 +59,6 @@ public class GameGridGenerator : MonoBehaviour
 							  Random.Range(0, GameConstants.Instance.NBlockTypes)).TempMoveSpeedScale = 0.25f;
 			}
 		}
-
-		//Set up the camera.
-		BlockViewCam.transform.position = new Vector3(gridCenter.x, gridCenter.y,
-													  BlockViewCam.transform.position.z);
-		BlockViewCam.orthographicSize = OrthoSize;
 
 
 		//Disable the player's input for a short time to let the blocks settle into place.
