@@ -66,7 +66,7 @@ public class GameplayController_Timed : GameplayController
 			//Pause the player's input.
 			if (reason == ClearBlockActions.PlayerInput)
 			{
-				StartCoroutine(PauseInputCoroutine());
+				StartCoroutine(PauseInputCoroutine(MoveWaitTime));
 			}
 
 			//Drop extra blocks in for every block that was cleared.
@@ -94,17 +94,8 @@ public class GameplayController_Timed : GameplayController
 		//Update UI.
 		TimeLeftLabel.text = GameConstants.CutOffDecimals(TimeLeft, 1).ToString();
 	}
-	
 
-	/// <summary>
-	/// Disables the player's input for 'MoveWaitTime' seconds.
-	/// </summary>
-	private System.Collections.IEnumerator PauseInputCoroutine()
-	{
-		LocalPlayer.IsInputDisabled = true;
-		yield return new WaitForSeconds(MoveWaitTime);
-		LocalPlayer.IsInputDisabled = false;
-	}
+
 	private System.Collections.IEnumerator WaitSpawnCoroutine(List<Vector2i> clearedBlocks)
 	{
 		yield return new WaitForSeconds(BlockSpawnWaitTime);

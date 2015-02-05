@@ -1,10 +1,8 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Gameplay Controllers/GameplayController_Timed.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/PresentTimedScoreController.cs">
     <Files>
-      <File FileName="Assets/Scripts/Gameplay Controllers/GameplayController_Timed.cs" Line="106" Column="66" />
-      <File FileName="Assets/Scripts/Gameplay Controllers/GameplayerController_TurnBased.cs" Line="6" Column="43" />
-      <File FileName="Assets/Scripts/Gameplay Controllers/GameplayController.cs" Line="1" Column="1" />
+      <File FileName="Assets/PresentTimedScoreController.cs" Line="8" Column="37" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
